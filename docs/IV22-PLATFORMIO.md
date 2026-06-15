@@ -119,47 +119,7 @@ http://<clock-ip>/update
 
 Default credentials: `flora` / `flora`
 
-## Libraries
-
-PlatformIO pulls dependencies from `platformio.ini` (`lib_deps`) and from the **ESP8266 Arduino framework** (`platform = espressif8266`). The firmware also includes one local driver in `src/`.
-
-### External libraries (`lib_deps`)
-
-| Library | Version (pinned) | Purpose |
-|---------|------------------|---------|
-| [ArduinoJson](https://github.com/bblanchon/ArduinoJson) | ^7.2.0 | Read/write `/config.json` on LittleFS (Wi-Fi credentials, brightness, timezone, NTP server, etc.) |
-| [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) | ^2.7.9 | Drive WS2812 colon LEDs (`NeoWs2813Method` on GPIO 2); color animations and status indicators (connecting, NTP sync, errors) |
-| [Time](https://github.com/PaulStoffregen/Time) | ^1.6.1 | `TimeLib` — system time (`hour()`, `minute()`, `second()`), sync interval, and NTP time provider hook |
-| [Timezone](https://github.com/JChristensen/Timezone) | ^1.2.4 | Convert UTC from NTP to local time with daylight saving rules (US/EU rules configurable via portal) |
-| [ESP8266TimerInterrupt](https://github.com/khoih-prog/ESP8266TimerInterrupt) | ^1.6.0 | Hardware timer ISR at 200 µs for flicker-free VFD PWM refresh (`TimerHandler`) |
-
-### ESP8266 Arduino framework libraries
-
-These ship with the `espressif8266` platform and are linked automatically — no separate `lib_deps` entry.
-
-| Library | Purpose |
-|---------|---------|
-| **Arduino core** (`Arduino.h`) | `setup()` / `loop()`, GPIO, `Serial`, timing (`millis`, `delay`), watchdog |
-| **ESP8266WiFi** | Station mode Wi-Fi connect, hostname, static IP config, MAC address |
-| **WiFiClient** | TCP client support used by the web stack |
-| **WiFiUdp** | UDP socket for NTP requests (port 8888 local) |
-| **DNSServer** | Captive portal DNS redirect in config mode (`FLORA_XXXXXX` AP) |
-| **ESP8266WebServer** | HTTP server for config portal, diyHue API, and status pages |
-| **ESP8266HTTPUpdateServer** | Over-the-air firmware upload at `/update` |
-| **ESP8266mDNS** | mDNS responder (`flora.local`) — optional, currently commented out in firmware |
-| **LittleFS** | On-flash filesystem for persistent `config.json` (256 KB partition) |
-| **FS** | Base filesystem API used with LittleFS |
-| **Ticker** | Periodic callbacks for segment crossfade and colon color timers (non-ISR) |
-
-### Local firmware module (not a PlatformIO library)
-
-| Module | Location | Purpose |
-|--------|----------|---------|
-| **shift_register** | `src/shift_register.cpp` | IRAM-safe HSPI bit-bang to VFD shift registers (GPIO 13/14/15); must run from ISR without calling flash-resident `SPI.transfer()` |
-
-### Transitive / build-only dependencies
-
-NeoPixelBus may pull in **I2S** from the framework for some LED methods; Flora uses `NeoWs2813Method` (GPIO bit-bang), so I2S is not used at runtime. PlatformIO resolves these automatically during the build.
+For dependency details, see [Libraries](BUILD.md#libraries) in [BUILD.md](BUILD.md).
 
 ## Quick reference
 
