@@ -3,44 +3,38 @@
  * Copyright (c) 2021 Martin Cerny
 */
 
-#include <FS.h>
+#include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <math.h>
 
-#include "ESP8266TimerInterrupt.h"
-#include "SPI.h"
+#include <ESP8266TimerInterrupt.h>
+#include "shift_register.h"
 
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
-#include <WiFiUdp.h>
 #include <TimeLib.h>
 #include <Ticker.h>
 
 #include <NeoPixelBus.h>
 #include <NeoPixelAnimator.h>
 
-#include <TimeLib.h>
 #include <Timezone.h>
 
-// Pick a clock version below!
-//#define CLOCK_VERSION_IV6
-#define CLOCK_VERSION_IV6_V2
-//#define CLOCK_VERSION_IV12
-//#define CLOCK_VERSION_IV22
-
 #if !defined(CLOCK_VERSION_IV6) && !defined(CLOCK_VERSION_IV6_V2) && !defined(CLOCK_VERSION_IV12) && !defined(CLOCK_VERSION_IV22)
-#error "You have to select a clock version! Line 25"
+#error "Select a clock variant via PlatformIO env (iv6, iv6_v2, iv12, iv22)"
+#endif
+
+#ifndef FW_VERSION
+#define FW_VERSION "5.2.0"
 #endif
 
 #define AP_NAME "FLORA_"
 #define FW_NAME "FLORA"
-#define FW_VERSION "5.1.3"
 #define CONFIG_TIMEOUT 300000 // 300000 = 5 minutes
 
 // ONLY CHANGE DEFINES BELOW IF YOU KNOW WHAT YOU'RE DOING!
@@ -237,7 +231,7 @@ Timezone TZ(EDT, EST);
 NeoPixelBus<NeoGrbFeature, NeoWs2813Method> strip(PixelCount);
 NeoGamma<NeoGammaTableMethod> colorGamma;
 NeoPixelAnimator animations(PixelCount);
-DynamicJsonDocument json(2048); // config buffer
+JsonDocument json; // config buffer
 Ticker fade_animation_ticker;
 Ticker onceTicker;
 Ticker colonTicker;
@@ -254,8 +248,17 @@ void setup() {
   // initialize digital pin LED_BUILTIN as an output.
   Serial.begin(115200);
   Serial.println("");
+#if defined(CLOCK_VERSION_IV6)
+  Serial.println("[BOOT] Clock variant: IV-6");
+#elif defined(CLOCK_VERSION_IV6_V2)
+  Serial.println("[BOOT] Clock variant: IV-6 V2 (6-digit)");
+#elif defined(CLOCK_VERSION_IV12)
+  Serial.println("[BOOT] Clock variant: IV-12");
+#elif defined(CLOCK_VERSION_IV22)
+  Serial.println("[BOOT] Clock variant: IV-22 (4-digit)");
+#endif
 
-  if (!SPIFFS.begin()) {
+  if (!initFilesystem()) {
     Serial.println("[CONF] Failed to mount file system");
   }
   readConfig();
@@ -312,6 +315,7 @@ void setup() {
         updateColonColor(green[bri]);
         enableDotsAnimation = false;
         strip_show();
+        shiftRegisterInit(DATA, CLOCK, LATCH);
         Serial.print("[WIFI] Successfully connected to: ");
         Serial.println(WiFi.SSID());
         Serial.print("[WIFI] Mac address: ");
@@ -332,6 +336,7 @@ void setup() {
   } else {
     ndp_setup();
     startServer();
+    showTime();
   }
 
   //initScreen();

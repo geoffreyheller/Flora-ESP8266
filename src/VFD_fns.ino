@@ -1,5 +1,4 @@
-
-void ICACHE_RAM_ATTR shiftSetValue(uint8_t pin, bool value) {
+void IRAM_ATTR shiftSetValue(uint8_t pin, bool value) {
   //(value) ? bitSet(bytes[pinsToRegisterMap[pin]], pinsToBitsMap[pin]) : bitClear(bytes[pinsToRegisterMap[pin]], pinsToBitsMap[pin]);
   (value) ? bitSet(bytes[pin / 8], pin % 8) : bitClear(bytes[pin / 8], pin % 8);
 }
@@ -13,19 +12,13 @@ void ICACHE_RAM_ATTR shiftSetValue(uint8_t pin, bool value) {
   }
   }
 */
-void ICACHE_RAM_ATTR shiftWriteBytes(volatile byte *data) {
 
-  for (int i; i < registersCount; i++) {
-    SPI.transfer(data[registersCount - 1 - i]);
-  }
-
-  // set gpio through register manipulation, fast!
-  GPOS = 1 << LATCH;
-  GPOC = 1 << LATCH;
-}
-
-void ICACHE_RAM_ATTR TimerHandler()
+void IRAM_ATTR TimerHandler()
 {
+
+  for (int i = 0; i < registersCount; i++) {
+    bytes[i] = 0;
+  }
 
   // Only one ISR timer is available so if we want the dots to not glitch during wifi connection, we need to put it here...
   // speed of the dots depends on refresh frequency of the display
@@ -62,7 +55,7 @@ void ICACHE_RAM_ATTR TimerHandler()
     }
   }
 
-  shiftWriteBytes(bytes); // Digits are reversed (first shift register = last digit etc.)
+  ::shiftWriteBytes(reinterpret_cast<const volatile uint8_t*>(bytes), registersCount); // Digits are reversed (first shift register = last digit etc.)
 
   for (int i = 0; i < registersCount; i++) {
     shiftedDutyState[i]++;
@@ -76,21 +69,14 @@ void ICACHE_RAM_ATTR TimerHandler()
 }
 
 void initScreen() {
-  pinMode(DATA, INPUT);
-  pinMode(CLOCK, OUTPUT);
-  pinMode(LATCH, OUTPUT);
-  digitalWrite(LATCH, LOW);
-
   bri = json["bri"].as<int>();
+  if (bri > 2) bri = 2;
   setupBriBalance();
   crossFadeTime = json["fade"].as<int>();
   setupPhaseShift();
   setupCrossFade();
 
-  SPI.begin();
-  SPI.setDataMode(SPI_MODE0);
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV16);
+  shiftRegisterInit(DATA, CLOCK, LATCH);
 
   ITimer.attachInterruptInterval(TIMER_INTERVAL_uS, TimerHandler);
   // 30ms slow 240ms, 20 => medium 160ms, 15 => quick 120ms
@@ -99,6 +85,7 @@ void initScreen() {
 }
 
 void enableScreen() {
+  shiftRegisterInit(DATA, CLOCK, LATCH);
   ITimer.attachInterruptInterval(TIMER_INTERVAL_uS, TimerHandler);
 }
 void disableScreen() {
@@ -209,6 +196,26 @@ void showTime() {
     setDigit(i, splitTime[i]);
   }
 
+  // Apply immediately so the display updates without waiting for fade ticks
+  for (int i = 0; i < registersCount; i++) {
+    for (int ii = 0; ii < segmentCount; ii++) {
+      segmentBrightness[i][ii] = targetBrightness[i][ii];
+    }
+  }
+
+  static bool loggedOnce = false;
+  if (!loggedOnce) {
+    loggedOnce = true;
+    Serial.printf("[DISP] %d:%02d -> digits ", hours, minute());
+    for (int i = 0; i < registersCount; i++) {
+      if (i == 0 && splitTime[0] == 0 && json["zero"].as<int>() == 0) {
+        Serial.print("-");
+      } else {
+        Serial.print(splitTime[i]);
+      }
+    }
+    Serial.println();
+  }
 }
 
 void cycleDigits() {

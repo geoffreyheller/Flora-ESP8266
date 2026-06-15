@@ -256,6 +256,7 @@ bool startServer() {
 
   server.onNotFound(handleNotFound);
   server.begin();
+  return true;
 }
 
 void handleDiyHueDetect() {

@@ -3,14 +3,12 @@
 const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
 byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-time_t getNtpTime()
+time_t getNtpTime(const char* server)
 {
   IPAddress ntpServerIP; // NTP server's ip address
 
   while (Udp.parsePacket() > 0) ; // discard any previously received packets
-  //Serial.println("Transmit NTP Request");
-  // get a random server from the pool
-  const char* server = json["ntp"].as<const char*>();
+
   if (server == NULL || server[0] == '\0') {
     server = ntpServerName;
   }
@@ -45,14 +43,24 @@ time_t getNtpTime()
 }
 
 time_t getNtpLocalTime() {
-  int retries = 3;
-  int iterator = 0;
-  time_t receivedTime = 0;
-
-  while (iterator < retries && receivedTime == 0) {
-    receivedTime = getNtpTime();
-    iterator++;
+  const char* configured = json["ntp"].as<const char*>();
+  if (configured == NULL || configured[0] == '\0') {
+    configured = ntpServerName;
   }
+
+  time_t receivedTime = 0;
+  for (int i = 0; i < 3 && receivedTime == 0; i++) {
+    receivedTime = getNtpTime(configured);
+  }
+
+  if (receivedTime == 0 && strcmp(configured, ntpServerName) != 0) {
+    Serial.print("[NTP] Falling back to ");
+    Serial.println(ntpServerName);
+    for (int i = 0; i < 3 && receivedTime == 0; i++) {
+      receivedTime = getNtpTime(ntpServerName);
+    }
+  }
+
   if (receivedTime == 0) {
     timeUpdateStatus = UPDATE_FAIL;
     failedAttempts += 1;

@@ -1,5 +1,16 @@
 # Flora-ESP8266
-Flora is an open source ESP8266 VFD clock, you can make a 4-digit IV-22 variant or 6-digit IV-6 variant. Designed to be low profile and as small as possible, using widely available components. 
+Flora is an open source ESP8285 VFD clock, you can make a 4-digit IV-22 variant or 6-digit IV-6 variant. Designed to be low profile and as small as possible, using widely available components.
+
+## Building firmware
+
+Firmware is built with [PlatformIO](https://platformio.org/). See [docs/BUILD.md](docs/BUILD.md) for environment selection, upload, and flash instructions.
+
+```bash
+pio run -e iv6_v2 -t upload   # IV-6 V2 (default)
+pio run -e iv22 -t upload     # IV-22 4-digit
+```
+
+Clock variant is selected via PlatformIO environment (`iv6`, `iv6_v2`, `iv12`, `iv22`) — no manual `#define` edits required.
 
 **STATUS:**
 - **IV-22 variant:** Tested and working, schematic, gerber BOM and 3D model of cover are included. Assembly guide added to wiki.
@@ -53,5 +64,4 @@ https://www.thingiverse.com/thing:4890505
 
 **License:**  
 GPL-3.0 License  
-LGPL-2.1 License (modified SPI library)  
 Mozilla Public License 2.0 (iro.js, https://github.com/jaames/iro.js)
