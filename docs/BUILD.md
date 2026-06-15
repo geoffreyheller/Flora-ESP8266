@@ -2,6 +2,8 @@
 
 Flora firmware targets the **ESP8285** (1 MB integrated flash). PlatformIO uses `board = esp8285`, which is the correct setting for this PCB even though the project name references ESP8266.
 
+Requires **espressif8266 platform 4.x** (Arduino core 3.1+, GCC 10+) for NeoPixelBus 2.7+.
+
 ## Prerequisites
 
 - [PlatformIO](https://platformio.org/) (CLI or VS Code / Cursor extension)
@@ -13,18 +15,18 @@ Select the VFD tube layout via the PlatformIO environment:
 | Environment | Clock variant |
 |-------------|---------------|
 | `iv6` | IV-6 (6-digit) |
-| `iv6_v2` | IV-6 V2 thin (default) |
+| `iv6_v2` | IV-6 V2 thin |
 | `iv12` | IV-12 thin |
-| `iv22` | IV-22 (4-digit) |
+| `iv22` | IV-22 (4-digit, default) |
 
 ## Build
 
 ```bash
-# Default variant (iv6_v2)
+# Default variant (iv22)
 pio run
 
 # Specific variant
-pio run -e iv22
+pio run -e iv6_v2
 ```
 
 Build all variants:
@@ -40,13 +42,13 @@ The ESP8285 has 1 MB flash. Firmware uses the `eagle.flash.1m256.ld` layout (~74
 Connect the board via USB (CH340 auto-reset) and upload:
 
 ```bash
-pio run -e iv6_v2 -t upload
+pio run -t upload
 ```
 
 Flora uses **NodeMCU-style** DTR/RTS auto-reset (not the ESP-01 `ck` method). This is configured in `platformio.ini` as `upload_resetmethod = nodemcu`. If upload still fails:
 
 1. Close the serial monitor or any other program using the COM port (Arduino IDE, PuTTY, etc.)
-2. Specify the port explicitly: `pio run -e iv6_v2 -t upload --upload-port COM6`
+2. Specify the port explicitly: `pio run -t upload --upload-port COM6`
 3. Manual bootloader entry: hold **FLASH**, tap **RESET**, release **RESET**, then release **FLASH**, and upload immediately
 
 Serial monitor at 115200 baud:

@@ -20,7 +20,7 @@ cd Flora-ESP8266
 
 ## 2. Use the correct environment
 
-The IV-22 **must** be built with the `iv22` environment. Other environments (`iv6`, `iv6_v2`, `iv12`) target different tube layouts and pin maps — flashing the wrong one will not drive the display correctly.
+The IV-22 **must** be built with the `iv22` environment (`default_envs` in `platformio.ini`). Other environments (`iv6`, `iv6_v2`, `iv12`) target different tube layouts and pin maps — flashing the wrong one will not drive the display correctly.
 
 | Environment | Clock |
 |-------------|-------|
@@ -30,6 +30,12 @@ The IV-22 **must** be built with the `iv22` environment. Other environments (`iv
 | `iv12` | IV-12 thin (6-digit) |
 
 ## 3. Build
+
+```bash
+pio run
+```
+
+Or explicitly:
 
 ```bash
 pio run -e iv22
@@ -52,13 +58,13 @@ Flora uses a **CH340** with **NodeMCU-style auto-reset** (already set in `platfo
 **Close the serial monitor** (and any other program using the COM port) before uploading.
 
 ```bash
-pio run -e iv22 -t upload
+pio run -t upload
 ```
 
 If PlatformIO does not pick the right port:
 
 ```bash
-pio run -e iv22 -t upload --upload-port COM6
+pio run -t upload --upload-port COM6
 ```
 
 Replace `COM6` with your port.
@@ -125,9 +131,9 @@ For dependency details, see [Libraries](BUILD.md#libraries) in [BUILD.md](BUILD.
 
 | Task | Command |
 |------|---------|
-| Build IV-22 | `pio run -e iv22` |
-| Flash IV-22 | `pio run -e iv22 -t upload` |
-| Flash (specific port) | `pio run -e iv22 -t upload --upload-port COM6` |
+| Build IV-22 | `pio run` |
+| Flash IV-22 | `pio run -t upload` |
+| Flash (specific port) | `pio run -t upload --upload-port COM6` |
 | Serial monitor | `pio device monitor` |
 | List ports | `pio device list` |
 
@@ -140,7 +146,7 @@ For dependency details, see [Libraries](BUILD.md#libraries) in [BUILD.md](BUILD.
 | Config lost after reboot | Wrong flash layout | `platformio.ini` must use `board_build.ldscript = eagle.flash.1m256.ld` |
 | Upload: “Access is denied” on COM port | Serial monitor still open | Close monitor, then upload |
 | NTP fails, then succeeds | Custom NTP host unreachable | Firmware retries 3× then falls back to `pool.ntp.org` |
-| `[BOOT]` shows wrong variant | Wrong environment flashed | `pio run -e iv22 -t upload` |
+| `[BOOT]` shows wrong variant | Wrong environment flashed | `pio run -t upload` |
 
 ## Hardware notes (IV-22)
 

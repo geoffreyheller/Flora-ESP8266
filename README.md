@@ -6,8 +6,8 @@ Flora is an open source ESP8285 VFD clock, you can make a 4-digit IV-22 variant 
 Firmware is built with [PlatformIO](https://platformio.org/). See [docs/BUILD.md](docs/BUILD.md) for environment selection, upload, and flash instructions.
 
 ```bash
-pio run -e iv6_v2 -t upload   # IV-6 V2 (default)
-pio run -e iv22 -t upload     # IV-22 4-digit
+pio run -t upload              # IV-22 (default)
+pio run -e iv6_v2 -t upload    # IV-6 V2
 ```
 
 Clock variant is selected via PlatformIO environment (`iv6`, `iv6_v2`, `iv12`, `iv22`) — no manual `#define` edits required.
