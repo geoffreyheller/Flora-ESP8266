@@ -472,6 +472,9 @@ void handleRoot() {
     if (server.hasArg("dst_hour")) {
       json["dst_hour"] = server.arg("dst_hour");
     }
+    if (json["dst_enable"].as<int>() == 1) {
+      ensureTimezoneConfigDefaults();
+    }
     saveConfig();
 
   }
@@ -756,7 +759,7 @@ void handleRoot() {
       html += " checked=\"checked\"";
     }
     html += ">&nbsp;Enable Daylight Saving (summer time)</label></div>";
-    html += "<p>When enabled, additional fields will pop up for you to set daylight saving time. <a href=\"https://www.timeanddate.com/time/map/\" target=\"_blank\">You can search for your timezone here</a></p>";
+    html += "<p>When enabled, additional fields will pop up for you to set daylight saving time. If you only set the offsets, defaults are <strong>last Sunday of March</strong> (summer) and <strong>last Sunday of October</strong> (winter). <a href=\"https://www.timeanddate.com/time/map/\" target=\"_blank\">You can search for your timezone here</a></p>";
 
 
 
@@ -820,6 +823,7 @@ void handleRoot() {
     html += "<div class=\"row\"><label for=\"std_month\">Month:</label>";
     html += "<select id=\"std_month\" name=\"std_month\">";
     unsigned int std_month = json["std_month"].as<unsigned int>();
+    if (std_month < 1) std_month = 10;
     html += "<option value=\"1\"";
     if (std_month == 1) html += " selected";
     html += ">Jan</option>";
@@ -862,7 +866,11 @@ void handleRoot() {
     html += "<div class=\"col\">"; // COLUMN START
     html += "<div class=\"row\"><label for=\"std_hour\">Hour:</label>";
     html += "<input type=\"number\" id=\"std_hour\" name=\"std_hour\" min=\"0\" max=\"23\" value=\"";
-    html += json["std_hour"].as<const char*>();
+    if (json["std_hour"].isNull()) {
+      html += "1";
+    } else {
+      html += json["std_hour"].as<const char*>();
+    }
     html += "\"></div>";
     html += "</div>"; // COLUMN END
 
@@ -932,6 +940,7 @@ void handleRoot() {
     html += "<div class=\"row\"><label for=\"dst_month\">Month:</label>";
     html += "<select id=\"dst_month\" name=\"dst_month\">";
     unsigned int dst_month = json["dst_month"].as<unsigned int>();
+    if (dst_month < 1) dst_month = 3;
     html += "<option value=\"1\"";
     if (dst_month == 1) html += " selected";
     html += ">Jan</option>";
@@ -974,7 +983,11 @@ void handleRoot() {
     html += "<div class=\"col\">"; // COLUMN START
     html += "<div class=\"row\"><label for=\"dst_hour\">Hour:</label>";
     html += "<input type=\"number\" id=\"dst_hour\" name=\"dst_hour\" min=\"0\" max=\"23\" value=\"";
-    html += json["dst_hour"].as<const char*>();
+    if (json["dst_hour"].isNull()) {
+      html += "1";
+    } else {
+      html += json["dst_hour"].as<const char*>();
+    }
     html += "\"></div>";
     html += "</div>"; // COLUMN END
 

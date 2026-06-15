@@ -30,7 +30,7 @@
 #endif
 
 #ifndef FW_VERSION
-#define FW_VERSION "5.2.0"
+#define FW_VERSION "6.0.0"
 #endif
 
 #define AP_NAME "FLORA_"

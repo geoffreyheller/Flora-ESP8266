@@ -59,6 +59,44 @@ bool initFilesystem() {
   return true;
 }
 
+// EU-style defaults: summer time last Sun Mar, standard time last Sun Oct.
+// Used when DST is enabled but transition dates were never configured (both
+// months defaulting to January breaks the Timezone library).
+void ensureTimezoneConfigDefaults() {
+  if (json["dst_enable"].as<int>() != 1) return;
+
+  const int dstMonth = json["dst_month"].as<int>();
+  const int stdMonth = json["std_month"].as<int>();
+  bool appliedDefaults = false;
+  if (dstMonth < 1 || stdMonth < 1 || dstMonth == stdMonth) {
+    json["dst_month"] = 3;
+    json["std_month"] = 10;
+    json["dst_week"] = 0;
+    json["std_week"] = 0;
+    json["dst_day"] = 1;
+    json["std_day"] = 1;
+    appliedDefaults = true;
+    Serial.println("[CONF] Applied default DST rules (last Sun Mar / last Sun Oct)");
+  }
+
+  if (json["dst_week"].isNull()) json["dst_week"] = 0;
+  if (json["std_week"].isNull()) json["std_week"] = 0;
+  if (json["dst_day"].as<int>() < 1) json["dst_day"] = 1;
+  if (json["std_day"].as<int>() < 1) json["std_day"] = 1;
+  if (json["dst_hour"].isNull()) json["dst_hour"] = 1;
+  if (json["std_hour"].isNull()) json["std_hour"] = 1;
+
+  const int16_t stdOff = json["std_offset"].as<int16_t>();
+  if (json["dst_offset"].isNull()) {
+    json["dst_offset"] = stdOff + 60;
+    appliedDefaults = true;
+  }
+
+  if (appliedDefaults) {
+    saveConfig();
+  }
+}
+
 String macToStr(const uint8_t* mac) {
   String result;
   for (int i = 0; i < 6; ++i) {
